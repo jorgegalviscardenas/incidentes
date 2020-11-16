@@ -80,6 +80,24 @@ exports.listarPorUsuario = (req, res) => {
         res.status(500).send({ mensaje: "Ocurrió un error listando las incidencias" });
     });
 }
+
+
+/**
+ * Se encarga buscar una incidencia de un usuario 
+ * @param req request con los datos para crear el usuario
+ * @param res response mediante el cual se da respuesta
+ */
+exports.buscarIncidenciaDeUsuario = (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    Incidencia.findOne({ usuario_id: req.params.idusuario , "_id" : ObjectId(req.params.idincidencia) }).then((incidencia) => {
+        res.status(200).send(incidencia);
+    }).catch((error) => {
+        res.status(500).send({ mensaje: "Ocurrió un error listando las incidencias" });
+    });
+}
 /**
  * Lista todas las incidencias
  * @param req request con los datos para crear el usuario
