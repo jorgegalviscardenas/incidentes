@@ -77,8 +77,65 @@ exports.listarPorUsuario = (req, res) => {
     Incidencia.find({ usuario_id: req.params.idusuario }).then((incidencias) => {
         res.status(200).send(incidencias);
     }).catch((error) => {
-        res.status(500).send({ mensaje: "Ocurrió un error listando las incidencias" });
+        res.status(500).send({ mensaje: "Ocurrió un error buscando la incidencia" });
     });
+}
+
+
+/**
+ * Se encarga de actualizar una nueva incidencia para un usuario
+ * @param req request con los datos para actualizar la incidencia
+ * @param res response mediante el cual se da respuesta
+ */
+exports.actualizar = (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    if (req.files && req.files.imagen) {
+        let imagen = req.files.imagen;
+        if (imagen.mimetype.substring(0, 6) == 'image/') {
+            let extension = imagen.name.split('.').pop();;
+            let nombreImagen = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + "." + extension;
+            imagen.mv('storage/archivos/' + nombreImagen, function (err) {
+                if (!err) {
+                    const incidencia = new Incidencia({
+                        latitud: req.body.latitud,
+                        longitud: req.body.longitud,
+                        imagen: nombreImagen,
+                        descripcion: req.body.descripcion,
+                        tipo: req.body.tipo,
+                        usuario_id: req.params.idusuario
+                    });
+                    incidencia.save().then((data) => {
+                        res.status(201).send(data);
+                    }).catch((error) => {
+                        res.status(500).send({ mensaje: "Ocurrió un error creando la incidencia" });
+                    });
+                } else {
+                    res.status(500).send({ mensaje: "Ocurrió un error creando la incidencia" });
+                }
+            });
+        } else {
+            return res.status(400).json({
+                errors: [
+                    {
+                        "msg": "El archivo cargado debe ser de tipo imagen",
+                        "param": "imagen",
+                        "location": "body"
+                    }]
+            });
+        }
+    } else {
+        return res.status(400).json({
+            errors: [
+                {
+                    "msg": "La imagen es requerida",
+                    "param": "imagen",
+                    "location": "body"
+                }]
+        });
+    }
 }
 
 
@@ -123,6 +180,22 @@ exports.validarCreacion = () => {
         body('descripcion').exists().withMessage("La descripción es requerida")
             .isLength({ min: 5 }).withMessage("La longitud minima de la descripción es 5"),
         body('tipo').exists().withMessage("El tipo es requerido")
+    ]
+}
+
+/**
+ * Reglas de validación para actulización de una incidencia
+ * @return Array reglas de validación
+ */
+exports.validarActualizacion = () => {
+    return [
+        body('latitud').optional()
+            .isFloat({ min: -90, max: 90 }).withMessage("La latitud puede ser minimo de -90 y máximo de 90"),
+        body('longitud').optional()
+            .isFloat({ min: -90, max: 90 }).withMessage("La longitud puede ser minimo de -180 y máximo de 180"),
+        body('descripcion').optional()
+            .isLength({ min: 5 }).withMessage("La longitud minima de la descripción es 5"),
+        body('tipo').optional()
     ]
 }
 /**
