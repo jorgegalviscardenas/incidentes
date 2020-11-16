@@ -8,10 +8,15 @@
  */
 module.exports = (app) => {
     const incidencias = require('../controllers/incidencia.controller.js');
-    const middleware=require('../middlewares/token.middleware.js');
+    const middleware = require('../middlewares/token.middleware.js');
     // Crea una nueva incidencia a un usuario
-    app.post('/usuarios/:idusuario/incidencias',middleware.tokenValido,incidencias.validarCreacion(), incidencias.crear);
-    // List all Products
+    app.post('/usuarios/:idusuario/incidencias', middleware.tokenValido, middleware.estaAutorizado,
+        incidencias.validarCreacion().concat(incidencias.validarExistenciaUsuario()), incidencias.crear);
+    //Lista las incidencias reportadas por un usuario
+    app.get('/usuarios/:idusuario/incidencias', middleware.tokenValido, middleware.estaAutorizado,
+        incidencias.validarExistenciaUsuario(), incidencias.listarPorUsuario);
+    // Lista todas las incidencias para un usuario con rol administrador
+    app.get('/incidencias', middleware.tokenValido, middleware.esAdmin, incidencias.listar);
     /**app.get('/products', products.findAll);
     // Get a single Product by id
     app.get('/products/:id', products.findOne);

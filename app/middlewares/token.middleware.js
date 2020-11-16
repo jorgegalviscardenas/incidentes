@@ -23,7 +23,7 @@ exports.tokenValido = (req, res, next) => {
         })
     }
     token = token.replace('Bearer ', '');
-    jwt.verify(token, configToken.secret, (err, user)=> {
+    jwt.verify(token, configToken.secret, (err, user) => {
         if (err) {
             res.status(401).send({
                 error: 'Token inválido'
@@ -54,7 +54,7 @@ exports.tokenValido = (req, res, next) => {
 exports.esAdmin = (req, res, next) => {
     var token = req.headers['authorization'];
     token = token.replace('Bearer ', '');
-    jwt.decode(token, (err, user)=> {
+    jwt.verify(token, configToken.secret, (err, user) => {
         Usuario.findById(user.id).then((usuario) => {
             if (usuario.roles.indexOf("admin") != -1) {
                 next();
@@ -76,7 +76,7 @@ exports.esAdmin = (req, res, next) => {
 exports.estaAutorizado = (req, res, next) => {
     var token = req.headers['authorization'];
     token = token.replace('Bearer ', '');
-    jwt.decode(token,(err, user)=> {
+    jwt.verify(token, configToken.secret, (err, user) => {
         Usuario.findById(user.id).then((usuario) => {
             if (usuario.roles.indexOf("admin") != -1) {
                 next();

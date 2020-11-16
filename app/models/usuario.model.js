@@ -1,3 +1,10 @@
+/**
+ * Modelo encarga de acceder a los datos del usuario
+ * @author Sebastian Noreña Marquez <sebastian.norenam@autonoma.edu.co>
+ * @author Brian Cardona Salazar <brian.cardonas@autonoma.edu.co>
+ * @author Jorge Galvis Cárdenas <jorge.galvisc@autonoma.edu.co>
+ * @version 20201115
+ */
 const mongoose = require('mongoose');
 const UsuarioSchema = mongoose.Schema({
     nombres: {
@@ -36,7 +43,7 @@ const UsuarioSchema = mongoose.Schema({
         type: String,
         required: true,
     },
-    roles:Array
+    roles: Array
 }, {
     timestamps: true
 });

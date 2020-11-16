@@ -45,7 +45,7 @@ exports.crear = (req, res) => {
 
 }
 /**
- * Se encarga de validar el login
+ * Reglas de valiacion para los parametros de ingreso del login
  * @param req request con los datos para crear el usuario
  * @param res response mediante el cual se da respuesta
  */

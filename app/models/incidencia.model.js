@@ -1,3 +1,10 @@
+/**
+ * Modelo encargado de manipular los datos referentes a las incidencias
+ * @author Sebastian Noreña Marquez <sebastian.norenam@autonoma.edu.co>
+ * @author Brian Cardona Salazar <brian.cardonas@autonoma.edu.co>
+ * @author Jorge Galvis Cárdenas <jorge.galvisc@autonoma.edu.co>
+ * @version 20201115
+ */
 const mongoose = require('mongoose');
 const IncidenciaSchema = mongoose.Schema({
     latitud: {
@@ -25,6 +32,9 @@ const IncidenciaSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    estado: String,
+    observacion_resolucion: String,
+    usuario_id: String
 }, {
     timestamps: true
 });
