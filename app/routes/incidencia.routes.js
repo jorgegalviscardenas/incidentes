@@ -20,7 +20,7 @@ module.exports = (app) => {
         incidencias.validarExistenciaUsuario().concat(incidencias.validarExistenciaIncidencia()),
         incidencias.buscar);
     //Obtiene la imagen de una incidencia
-    app.get('/usuarios/:idusuario/incidencias/:id/imagen', middleware.tokenValido, middleware.esAdmin,
+    app.get('/usuarios/:idusuario/incidencias/:id/imagen', middleware.tokenValido, middleware.estaAutorizado,
         incidencias.validarExistenciaUsuario().concat(incidencias.validarExistenciaIncidencia()),
         incidencias.obtenerImagen);
     //Actualiza la incidencia para un usuario
@@ -33,11 +33,11 @@ module.exports = (app) => {
     // Lista todas las incidencias para un usuario con rol administrador
     app.get('/incidencias', middleware.tokenValido, middleware.esAdmin, incidencias.validarListar(), incidencias.listar);
     //Ve una incidencia como usuario administrador
-    app.get('/incidencias/:id', middleware.tokenValido,  incidencias.validarExistenciaIncidencia(), incidencias.buscar);
+    app.get('/incidencias/:id', middleware.tokenValido, middleware.esAdmin,incidencias.validarExistenciaIncidencia(), incidencias.buscar);
     //Obtiene la imagen de una incidencia
-    app.get('/incidencias/:id/imagen', middleware.tokenValido, incidencias.validarExistenciaIncidencia(), incidencias.obtenerImagen);
+    app.get('/incidencias/:id/imagen', middleware.tokenValido,middleware.esAdmin, incidencias.validarExistenciaIncidencia(), incidencias.obtenerImagen);
     //Actualiza una incidencia como usuario administrador
-    app.put('/incidencias/:id', middleware.tokenValido, 
+    app.put('/incidencias/:id', middleware.tokenValido, middleware.esAdmin,
         incidencias.validarExistenciaIncidencia().concat(incidencias.validarActualizacion()).concat(incidencias.validarActualizacionAdmin()),
         incidencias.actualizar);
     //Elimina una incidencia como usuario administrador
