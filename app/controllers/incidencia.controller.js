@@ -94,11 +94,9 @@ exports.actualizarPorUsuario = (req, res) => {
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
-    if(!req.body.hasOwnProperty('latitud') &&
-       !req.body.hasOwnProperty('longitud') &&
-       !req.body.hasOwnProperty('descripcion') &&
-       !req.body.hasOwnProperty('tipo') &&
-       !req.files ||( req.files && !req.files.imagen))
+    if (!req.body.latitud && !req.body.longitud &&
+        !req.body.descripcion && !req.body.tipo &&
+        !req.files.imagen) {
         return res.status(400).json({
             errors: [
                 {
@@ -107,9 +105,7 @@ exports.actualizarPorUsuario = (req, res) => {
                     "location": "body"
                 }]
         });
-    
-
-       
+    }
     if (req.files && req.files.imagen) {
         let imagen = req.files.imagen;
         if (imagen.mimetype.substring(0, 6) == 'image/') {
@@ -118,14 +114,14 @@ exports.actualizarPorUsuario = (req, res) => {
             imagen.mv('storage/archivos/' + nombreImagen, function (err) {
                 if (!err) {
                     obj = {}
-                    obj.imagen =nombreImagen; 
-                    actualizarRegistro(req,res, obj);
+                    obj.imagen = nombreImagen;
+                    actualizarRegistro(req, res, obj);
                 } else {
                     res.status(500).send({ mensaje: "Ocurrió un error actualizando la incidencia" });
                 }
             });
         }
-        
+
         else {
 
             return res.status(400).json({
@@ -138,7 +134,7 @@ exports.actualizarPorUsuario = (req, res) => {
             });
         }
     } else {
-        actualizarRegistro(req,res,{});
+        actualizarRegistro(req, res, {});
     }
 }
 
@@ -153,7 +149,7 @@ exports.buscarPorUsuario = (req, res) => {
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
-    Incidencia.findOne({ usuario_id: req.params.idusuario , "_id" : ObjectId(req.params.idincidencia) }).then((incidencia) => {
+    Incidencia.findOne({ usuario_id: req.params.idusuario, "_id": ObjectId(req.params.id) }).then((incidencia) => {
         res.status(200).send(incidencia);
     }).catch((error) => {
         res.status(500).send({ mensaje: "Ocurrió un error listando las incidencias" });
@@ -170,7 +166,7 @@ exports.eliminarPorUsuario = (req, res) => {
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
-    Incidencia.findOneAndDelete({ usuario_id: req.params.idusuario , "_id" : req.params.idincidencia }).then((incidencia) => {
+    Incidencia.findOneAndDelete({ usuario_id: req.params.idusuario, "_id": req.params.id}).then((incidencia) => {
         res.status(200).send(incidencia);
     }).catch((error) => {
         res.status(500).send({ mensaje: "Ocurrió un error eliminando la incidencias" });
@@ -232,7 +228,7 @@ exports.validarCreacion = () => {
  */
 exports.validarActualizacion = () => {
     return [
-       /* body('latitud').optional()
+        body('latitud').optional()
             .isFloat({ min: -90, max: 90 }).withMessage("La latitud puede ser minimo de -90 y máximo de 90"),
         body('longitud').optional()
             .isFloat({ min: -90, max: 90 }).withMessage("La longitud puede ser minimo de -180 y máximo de 180"),
@@ -240,7 +236,7 @@ exports.validarActualizacion = () => {
             .isLength({ min: 5 }).withMessage("La longitud minima de la descripción es 5"),
         body('tipo').optional()
             .isIn(['Alcantarillado', 'Aseo', 'Electrico', 'Transito']).withMessage("No se atienden este tipo de incidencias")
-    */ ]
+    ]
 }
 /**
  * Reglas de validación para la existencia de un usuario
@@ -292,21 +288,29 @@ exports.validarListar = () => {
             .isIn(['Pendiente', 'Resuelta', 'Rechazada']).withMessage("No se tiene este estado para las incidencias")
     ]
 }
+/**
+ * 
+ * @param req request donde vienen los datos
+ * @param res response donde vienen los datos
+ * @param obj el objeto que contiene los datos
+ */
+const actualizarRegistro = (req, res, obj) => {
+    if (req.body.latitud) {
+        obj.latitud = req.body.latitud;
+    }
+    if (req.body.longitud) {
+        obj.longitud = req.body.longitud;
+    }
+    if (req.body.descripcion) {
+        obj.descripcion = req.body.descripcion;
+    }
+    if (req.body.tipo) {
+        obj.tipo = req.body.tipo;
+    }
 
-const actualizarRegistro = (req ,res,obj ) =>
-{
-    if(req.body.hasOwnProperty('latitud'))
-        obj['latitud'] =req.body.latitud;
-    if(req.body.hasOwnProperty('latitud'))
-        obj['longitud'] =req.body.longitud; 
-    if(req.body.hasOwnProperty('descripcion'))
-       obj['descripcion'] =req.body.descripcion; 
-    if(req.body.hasOwnProperty('tipo'))
-       obj['tipo'] =req.body.tipo; 
-
-    Incidencia.findOneAndUpdate({usuario_id: req.params.idusuario , "_id" : req.params.idincidencia }, obj,{new: true}).then((incidencia) => {
-           res.status(200).send(incidencia);
-        }).catch((error) => {
-            res.status(500).send({ mensaje: "Ocurrió un error  actualizando incidencia" });
-        });
+    Incidencia.findOneAndUpdate({ usuario_id: req.params.idusuario, "_id": req.params.id}, obj, { new: true }).then((incidencia) => {
+        res.status(200).send(incidencia);
+    }).catch((error) => {
+        res.status(500).send({ mensaje: "Ocurrió un error  actualizando incidencia" });
+    });
 }

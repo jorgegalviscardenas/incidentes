@@ -1,5 +1,5 @@
 module.exports = {
-    url: 'mongodb+srv://sebastiannorenam:Delta2019@cluster0.b3dpc.mongodb.net/proyecto?retryWrites=true&w=majority',
+    url: 'mongodb://localhost:27017/incidentes',
     options: {
         useCreateIndex: true,
         useNewUrlParser: true,

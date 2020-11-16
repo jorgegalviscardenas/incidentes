@@ -33,7 +33,7 @@ var IncidenciaSchema = mongoose.Schema({
         required: true
     },
     estado: String,
-    observacion_resolucion: String,
+    descripcion_solucion: String,
     usuario_id: String
 }, {
     timestamps: true
