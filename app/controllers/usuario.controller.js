@@ -56,7 +56,7 @@ exports.login = (req, res) => {
     }
     Usuario.findOne({ email: req.body.email }).then(data => {
         if (data) {
-            bcrypt.compare(req.body.contrasenia, data.contrasenia, (err, esCorrecta)=> {
+            bcrypt.compare(req.body.contrasenia, data.contrasenia, (err, esCorrecta) => {
                 if (esCorrecta) {
                     res.status(200).send(generarDatosUsuario(data));
                 } else {
@@ -103,6 +103,14 @@ exports.validarCreacion = () => {
                     return Promise.reject('Ya se encuentra un usuario registrado con ese email');
                 }
             });
+        }),
+        body('confirmacion_contrasenia').exists().withMessage("La confirmación de la contraseña es requerida")
+            .isLength({ min: 5, max: 20 }).withMessage("La confirmación de la contraseña debe tener una longitud minima de 5 y maximo de 20"),
+        body('confirmacion_contrasenia').custom((value, { req }) => {
+            const contrasenia = req.body.contrasenia;
+            if (contrasenia != value) {
+                return Promise.reject('La contraseña y la confirmación de la contraseña deben ser iguales');
+            }
         })
     ]
 }

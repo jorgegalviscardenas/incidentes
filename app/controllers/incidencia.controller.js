@@ -6,7 +6,7 @@
  * @author Jorge Galvis Cárdenas <jorge.galvisc@autonoma.edu.co>
  * @version 20201115
  */
-const { body, param, validationResult } = require('express-validator');
+const { body, param, query, validationResult } = require('express-validator');
 const Usuario = require('../models/usuario.model.js');
 const Incidencia = require('../models/incidencia.model.js');
 /**
@@ -32,7 +32,8 @@ exports.crear = (req, res) => {
                         imagen: nombreImagen,
                         descripcion: req.body.descripcion,
                         tipo: req.body.tipo,
-                        usuario_id: req.params.idusuario
+                        usuario_id: req.params.idusuario,
+                        estado: "Pendiente"
                     });
                     incidencia.save().then((data) => {
                         res.status(201).send(data);
@@ -161,9 +162,28 @@ exports.buscarIncidenciaDeUsuario = (req, res) => {
  * @param res response mediante el cual se da respuesta
  */
 exports.listar = (req, res) => {
-    Incidencia.find().then((incidencias) => {
-        res.status(200).send(incidencias);
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    let filtro = {};
+    if (req.query.estado) {
+        filtro.estado = req.query.estado;
+    }
+    if (req.query.tipo) {
+        filtro.tipo = req.query.tipo;
+    }
+    Incidencia.find(filtro).then((incidencias) => {
+        if (req.query.latitud && req.query.longitud && req.query.radio) {
+            let nuevasIncidencias = incidencias.filter(function (incidencia) {
+                return (incidencia.seEncuentraEnRadio(req.query.latitud, req.query.longitud, req.query.radio));
+            });
+            res.status(200).send(nuevasIncidencias);
+        } else {
+            res.status(200).send(incidencias);
+        }
     }).catch((error) => {
+        console.log(error);
         res.status(500).send({ mensaje: "Ocurrió un error listando las incidencias" });
     });
 }
@@ -180,6 +200,7 @@ exports.validarCreacion = () => {
         body('descripcion').exists().withMessage("La descripción es requerida")
             .isLength({ min: 5 }).withMessage("La longitud minima de la descripción es 5"),
         body('tipo').exists().withMessage("El tipo es requerido")
+            .isIn(['Alcantarillado', 'Aseo', 'Electrico', 'Transito']).withMessage("No se atienden este tipo de incidencias")
     ]
 }
 
@@ -228,5 +249,23 @@ exports.validarExistenciaIncidencia = () => {
                 }
             });
         })
+    ]
+}
+/**
+ * Reglas de validación cuando se lista las incidencias
+ * @return Array reglas de validación
+ */
+exports.validarListar = () => {
+    return [
+        query('latitud').optional()
+            .isFloat({ min: -90, max: 90 }).withMessage("La latitud puede ser minimo de -90 y máximo de 90"),
+        query('longitud').optional()
+            .isFloat({ min: -90, max: 90 }).withMessage("La longitud puede ser minimo de -180 y máximo de 180"),
+        query('radio').optional()
+            .isFloat({ min: 1 }).withMessage("El radio mínimo es de un 1 metro"),
+        query('tipo').optional()
+            .isIn(['Alcantarillado', 'Aseo', 'Electrico', 'Transito']).withMessage("No se atienden este tipo de incidencias"),
+        query('estado').optional()
+            .isIn(['Pendiente', 'Resuelta', 'Rechazada']).withMessage("No se tiene este estado para las incidencias")
     ]
 }
