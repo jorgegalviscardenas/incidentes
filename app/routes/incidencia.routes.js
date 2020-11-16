@@ -15,6 +15,9 @@ module.exports = (app) => {
     //Lista las incidencias reportadas por un usuario
     app.get('/usuarios/:idusuario/incidencias', middleware.tokenValido, middleware.estaAutorizado,
         incidencias.validarExistenciaUsuario(), incidencias.listarPorUsuario);
+    //trae una incidencia la incidencia indicada del usuario indicado 
+    app.get('/usuarios/:idusuario/incidencias/:idincidencia', middleware.tokenValido, middleware.estaAutorizado,
+        incidencias.validarExistenciaUsuario(), incidencias.buscarIncidenciaDeUsuario);
     // Lista todas las incidencias para un usuario con rol administrador
     app.get('/incidencias', middleware.tokenValido, incidencias.validarListar(), incidencias.listar);
     /**app.get('/products', products.findAll);
