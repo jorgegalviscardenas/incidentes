@@ -9,7 +9,7 @@
 const { body, param, query, validationResult } = require('express-validator');
 const Usuario = require('../models/usuario.model.js');
 const Incidencia = require('../models/incidencia.model.js');
-const { response } = require('express');
+const fs = require('fs')
 /**
  * Se encarga de crear una nueva incidencia para un usuario
  * @param req request con los datos para crear el usuario
@@ -76,7 +76,14 @@ exports.listarPorUsuario = (req, res) => {
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
-    Incidencia.find({ usuario_id: req.params.idusuario }).then((incidencias) => {
+    let filtro = { usuario_id: req.params.idusuario };
+    if (req.query.estado) {
+        filtro.estado = req.query.estado;
+    }
+    if (req.query.tipo) {
+        filtro.tipo = req.query.tipo;
+    }
+    Incidencia.find(filtro).then((incidencias) => {
         res.status(200).send(incidencias);
     }).catch((error) => {
         res.status(500).send({ mensaje: "Ocurrió un error buscando la incidencia" });
@@ -85,7 +92,7 @@ exports.listarPorUsuario = (req, res) => {
 
 
 /**
- * Se encarga de actualizar una nueva incidencia para un usuario
+ * Se encarga de actualizar nueva incidencia por usuario
  * @param req request con los datos para actualizar la incidencia
  * @param res response mediante el cual se da respuesta
  */
@@ -94,62 +101,40 @@ exports.actualizarPorUsuario = (req, res) => {
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
-    if (!req.body.latitud && !req.body.longitud &&
-        !req.body.descripcion && !req.body.tipo &&
-        !req.files.imagen) {
-        return res.status(400).json({
-            errors: [
-                {
-                    "msg": "debe enviar por lo menos un parametro valido",
-                    "param": "latitud,longitud,descripcion,tipo,imagen",
-                    "location": "body"
-                }]
-        });
-    }
-    if (req.files && req.files.imagen) {
-        let imagen = req.files.imagen;
-        if (imagen.mimetype.substring(0, 6) == 'image/') {
-            let extension = imagen.name.split('.').pop();;
-            let nombreImagen = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + "." + extension;
-            imagen.mv('storage/archivos/' + nombreImagen, function (err) {
-                if (!err) {
-                    obj = {}
-                    obj.imagen = nombreImagen;
-                    actualizarRegistro(req, res, obj);
-                } else {
-                    res.status(500).send({ mensaje: "Ocurrió un error actualizando la incidencia" });
-                }
-            });
-        }
-
-        else {
-
-            return res.status(400).json({
-                errors: [
-                    {
-                        "msg": "El archivo cargado debe ser de tipo imagen",
-                        "param": "imagen",
-                        "location": "body"
-                    }]
-            });
-        }
-    } else {
-        actualizarRegistro(req, res, {});
-    }
+    actualizarRegistro(req, res, {});
 }
-
-
 /**
- * Se encarga buscar una incidencia de un usuario 
- * @param req request con los datos para crear el usuario
+ * Se encarga de actualizar nueva incidencia como administrador
+ * @param req request con los datos para actualizar la incidencia
  * @param res response mediante el cual se da respuesta
  */
-exports.buscarPorUsuario = (req, res) => {
+exports.actualizar = (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
-    Incidencia.findOne({ usuario_id: req.params.idusuario, "_id": ObjectId(req.params.id) }).then((incidencia) => {
+    let obj = {};
+    if (req.body.estado) {
+        obj.estado = req.body.estado;
+    }
+    if (req.body.descripcion_solucion) {
+        obj.descripcion_solucion = req.body.descripcion_solucion;
+    }
+    actualizarRegistro(req, res, obj);
+}
+
+
+/**
+ * Se encarga buscar una incidencia
+ * @param req request con los datos para crear el usuario
+ * @param res response mediante el cual se da respuesta
+ */
+exports.buscar = (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    Incidencia.findById(req.params.id).then((incidencia) => {
         res.status(200).send(incidencia);
     }).catch((error) => {
         res.status(500).send({ mensaje: "Ocurrió un error listando las incidencias" });
@@ -157,16 +142,16 @@ exports.buscarPorUsuario = (req, res) => {
 }
 
 /**
- * Se encarga eliminar una incidencia de un usuario 
+ * Se encarga eliminar una incidencia
  * @param req request con los datos para crear el usuario
  * @param res response mediante el cual se da respuesta
  */
-exports.eliminarPorUsuario = (req, res) => {
+exports.eliminar = (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
-    Incidencia.findOneAndDelete({ usuario_id: req.params.idusuario, "_id": req.params.id}).then((incidencia) => {
+    Incidencia.findByIdAndDelete(req.params.id).then((incidencia) => {
         res.status(200).send(incidencia);
     }).catch((error) => {
         res.status(500).send({ mensaje: "Ocurrió un error eliminando la incidencias" });
@@ -201,7 +186,26 @@ exports.listar = (req, res) => {
             res.status(200).send(incidencias);
         }
     }).catch((error) => {
-        console.log(error);
+        res.status(500).send({ mensaje: "Ocurrió un error listando las incidencias" });
+    });
+}
+/**
+ * Obtener la imagen de una incidencia
+ * @param req request con los datos para crear el usuario
+ * @param res response mediante el cual se da respuesta
+ */
+exports.obtenerImagen = (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    Incidencia.findById(req.params.id).then((incidencia) => {
+        if (fs.existsSync('storage/archivos/' + incidencia.imagen)) {
+            res.sendFile(process.cwd() + '/storage/archivos/' + incidencia.imagen);
+        } else {
+            res.status(404).send({ mensaje: "No se encontró imagen para la incidencia" });
+        }
+    }).catch((error) => {
         res.status(500).send({ mensaje: "Ocurrió un error listando las incidencias" });
     });
 }
@@ -236,6 +240,18 @@ exports.validarActualizacion = () => {
             .isLength({ min: 5 }).withMessage("La longitud minima de la descripción es 5"),
         body('tipo').optional()
             .isIn(['Alcantarillado', 'Aseo', 'Electrico', 'Transito']).withMessage("No se atienden este tipo de incidencias")
+    ]
+}
+/**
+ * Reglas de validación para actualización de una incidencia como admin
+ * @return Array reglas de validación
+ */
+exports.validarActualizacionAdmin = () => {
+    return [
+        body('estado').optional()
+            .isIn(['Pendiente', 'Resuelta', 'Rechazada']).withMessage("No se tiene este estado para las incidencias"),
+        body('descripcion_solucion').optional()
+            .isLength({ min: 5 }).withMessage("La longitud minima de la descripción de la solución es 5")
     ]
 }
 /**
@@ -289,10 +305,10 @@ exports.validarListar = () => {
     ]
 }
 /**
- * 
+ * Se encarga de actualizar un registro especifico
  * @param req request donde vienen los datos
  * @param res response donde vienen los datos
- * @param obj el objeto que contiene los datos
+ * @param obj objeto con los datos a actualizar
  */
 const actualizarRegistro = (req, res, obj) => {
     if (req.body.latitud) {
@@ -307,10 +323,49 @@ const actualizarRegistro = (req, res, obj) => {
     if (req.body.tipo) {
         obj.tipo = req.body.tipo;
     }
+    Incidencia.findById(req.params.id).then((incidencia) => {
+        if (req.files && req.files.imagen) {
+            let imagen = req.files.imagen;
+            if (imagen.mimetype.substring(0, 6) == 'image/') {
+                if (fs.existsSync('storage/archivos/' + incidencia.imagen)) {
+                    fs.unlinkSync('storage/archivos/' + incidencia.imagen)
+                }
+                let extension = imagen.name.split('.').pop();;
+                let nombreImagen = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + "." + extension;
+                imagen.mv('storage/archivos/' + nombreImagen, function (err) {
+                    if (!err) {
+                        obj.imagen = nombreImagen;
+                        Incidencia.findByIdAndUpdate(req.params.id, obj, { new: true }).then((incidencia) => {
+                            res.status(200).send(incidencia);
+                        }).catch((error) => {
+                            res.status(500).send({ mensaje: "Ocurrió un error  actualizando incidencia" });
+                        });
+                    } else {
+                        res.status(500).send({ mensaje: "Ocurrió un error actualizando la incidencia" });
+                    }
+                });
+            } else {
+                return res.status(400).json({
+                    errors: [
+                        {
+                            "msg": "El archivo cargado debe ser de tipo imagen",
+                            "param": "imagen",
+                            "location": "body"
+                        }]
+                });
+            }
+        } else {
+            Incidencia.findByIdAndUpdate(req.params.id, obj, { new: true }).then((incidencia) => {
+                res.status(200).send(incidencia);
+            }).catch((error) => {
+                res.status(500).send({ mensaje: "Ocurrió un error  actualizando incidencia" });
+            });
+        }
 
-    Incidencia.findOneAndUpdate({ usuario_id: req.params.idusuario, "_id": req.params.id}, obj, { new: true }).then((incidencia) => {
-        res.status(200).send(incidencia);
     }).catch((error) => {
-        res.status(500).send({ mensaje: "Ocurrió un error  actualizando incidencia" });
+
     });
+
+
+
 }
