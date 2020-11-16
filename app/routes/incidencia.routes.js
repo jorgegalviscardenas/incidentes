@@ -15,17 +15,19 @@ module.exports = (app) => {
     //Lista las incidencias reportadas por un usuario
     app.get('/usuarios/:idusuario/incidencias', middleware.tokenValido, middleware.estaAutorizado,
         incidencias.validarExistenciaUsuario(), incidencias.listarPorUsuario);
-    //trae una incidencia la incidencia indicada del usuario indicado 
-    app.get('/usuarios/:idusuario/incidencias/:idincidencia', middleware.tokenValido, middleware.estaAutorizado,
-        incidencias.validarExistenciaUsuario(), incidencias.buscarPorUsuario);
+    //Consulta una incidencia la incidencia indicada del usuario indicado 
+    app.get('/usuarios/:idusuario/incidencias/:id', middleware.tokenValido, middleware.estaAutorizado,
+        incidencias.validarExistenciaUsuario().concat(incidencias.validarExistenciaIncidencia()), 
+        incidencias.buscarPorUsuario);
+    //Actualiza la incidencia para un usuario
+    app.put('/usuarios/:idusuario/incidencias/:id', middleware.tokenValido, middleware.estaAutorizado,
+        incidencias.validarActualizacion().concat(incidencias.validarExistenciaUsuario()).concat(incidencias.validarExistenciaIncidencia())
+        , incidencias.actualizarPorUsuario);
+    //Elimina la incidencia para un usuario
+    app.delete('/usuarios/:idusuario/incidencias/:id', middleware.tokenValido, middleware.estaAutorizado,
+        incidencias.validarExistenciaUsuario().concat(incidencias.validarExistenciaIncidencia()), incidencias.eliminarPorUsuario);
     // Lista todas las incidencias para un usuario con rol administrador
     app.get('/incidencias', middleware.tokenValido, incidencias.validarListar(), incidencias.listar);
-    
-    app.put('/usuarios/:idusuario/incidencias/:idincidencia', middleware.tokenValido, middleware.estaAutorizado,
-    incidencias.validarActualizacion().concat(incidencias.validarExistenciaUsuario()), incidencias.actualizarPorUsuario);
-    
-    app.delete('/usuarios/:idusuario/incidencias/:idincidencia', middleware.tokenValido, middleware.estaAutorizado,
-        incidencias.validarExistenciaUsuario(), incidencias.eliminarPorUsuario);
     /**app.get('/products', products.findAll);
     // Get a single Product by id
     app.get('/products/:id', products.findOne);

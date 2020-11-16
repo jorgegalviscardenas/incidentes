@@ -1,5 +1,5 @@
 /**
- * Encargado de validar que se tiene un token valido en la petición
+ * Encargado de validar el acceso a los servicios
  * @author Sebastian Noreña Marquez <sebastian.norenam@autonoma.edu.co>
  * @author Brian Cardona Salazar <brian.cardonas@autonoma.edu.co>
  * @author Jorge Galvis Cárdenas <jorge.galvisc@autonoma.edu.co>
