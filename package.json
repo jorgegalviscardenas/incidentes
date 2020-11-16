@@ -12,9 +12,13 @@
   "author": "Sebastian Noreña Márquez, Brian Cardona Salazar, Jorge Galvis Cárdenas",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^5.0.0",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "express-fileupload": "^1.2.0",
+    "express-validator": "^6.6.1",
+    "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.10.14"
   }
 }
